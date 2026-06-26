@@ -1,0 +1,25 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    invalid_annotation_target: ignore
+    # Freezed 3.1.0 generates mixin-based code with abstract members.
+    # Dart 3.11 strict analysis flags non-abstract classes using these mixins.
+    # This is expected Freezed codegen behavior; suppress until Freezed 3.2+ is compatible.
+    non_abstract_class_inherits_abstract_member: ignore
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    always_declare_return_types: true
+    annotate_overrides: true
+    avoid_print: true
+    directives_ordering: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+    require_trailing_commas: true
+    use_key_in_widget_constructors: true

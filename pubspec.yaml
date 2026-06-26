@@ -1,0 +1,63 @@
+name: lumora_fe
+description: "Lumora mobile/frontend application."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  app_links: ^7.0.0
+  cached_network_image: ^3.4.1
+  connectivity_plus: ^6.1.4
+  country_flags: ^4.1.2
+  country_picker: ^2.0.27
+  cupertino_icons: ^1.0.8
+  dartz: ^0.10.1
+  dio: ^5.9.2
+  equatable: ^2.0.7
+  firebase_core: ^4.5.0
+  firebase_messaging: ^16.1.2
+  flutter_image_compress: ^2.3.0
+  flutter_riverpod: ^2.6.1
+  flutter_secure_storage: ^10.0.0
+  flutter_svg: ^2.0.17
+  freezed_annotation: ^3.0.0
+  go_router: ^17.1.0
+  google_sign_in: ^7.2.0
+  home_widget: ^0.9.0
+  image_cropper: ^12.1.0
+  image_picker: ^1.2.1
+  json_annotation: ^4.9.0
+  logger: ^2.5.0
+  lottie: ^3.3.2
+  mobile_scanner: ^7.2.0
+  permission_handler: ^12.0.1
+  pinput: ^6.0.2
+  qr_flutter: ^4.1.0
+  riverpod_annotation: ^2.6.1
+  share_plus: ^12.0.1
+  shared_preferences: ^2.5.5
+  shimmer: ^3.0.0
+  sign_in_with_apple: ^7.0.1
+  sms_autofill: ^2.4.1
+  socket_io_client: ^2.0.3+1
+  uuid: ^4.5.1
+  web_socket_channel: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.4.14
+  custom_lint: ^0.7.5
+  freezed: ^3.1.0
+  flutter_lints: ^6.0.0
+  json_serializable: ^6.9.4
+  mocktail: ^1.0.4
+  riverpod_generator: ^2.6.4
+  riverpod_lint: ^2.6.4
+
+flutter:
+  uses-material-design: true
