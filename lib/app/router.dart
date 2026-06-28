@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/auth_placeholder_screen.dart';
 import '../features/foundation/foundation_screen.dart';
+import '../features/journey/journey_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/lumora_shell.dart';
 
@@ -37,7 +38,8 @@ GoRouter createAppRouter({
               path: '/today',
               builder: (context, state) => const FoundationScreen(
                 title: 'Today',
-                headline: 'Plan a meaningful week, then return to one calm focus at a time.',
+                headline:
+                    'Plan a meaningful week, then return to one calm focus at a time.',
               ),
             ),
           ],
@@ -46,10 +48,7 @@ GoRouter createAppRouter({
           routes: [
             GoRoute(
               path: '/journey',
-              builder: (context, state) => const FoundationScreen(
-                title: 'Weekly Journey',
-                headline: 'Mock mode keeps planning available while the API catches up.',
-              ),
+              builder: (context, state) => const JourneyScreen(),
             ),
           ],
         ),
