@@ -3,10 +3,24 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/auth_placeholder_screen.dart';
 import '../features/foundation/foundation_screen.dart';
+import '../features/settings/settings_screen.dart';
 import '../features/shell/lumora_shell.dart';
 
-GoRouter createAppRouter({String initialLocation = '/today'}) => GoRouter(
+GoRouter createAppRouter({
+  String initialLocation = '/today',
+  bool isAuthenticated = false,
+}) => GoRouter(
   initialLocation: initialLocation,
+  redirect: (context, state) {
+    final isAuthRoute = state.matchedLocation == '/auth';
+    if (!isAuthenticated && !isAuthRoute) {
+      return '/auth';
+    }
+    if (isAuthenticated && isAuthRoute) {
+      return '/today';
+    }
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/auth',
@@ -54,10 +68,7 @@ GoRouter createAppRouter({String initialLocation = '/today'}) => GoRouter(
           routes: [
             GoRoute(
               path: '/settings',
-              builder: (context, state) => const FoundationScreen(
-                title: 'Settings',
-                headline: 'Preferences and logout will stay simple for MVP.',
-              ),
+              builder: (context, state) => const SettingsScreen(),
             ),
           ],
         ),
