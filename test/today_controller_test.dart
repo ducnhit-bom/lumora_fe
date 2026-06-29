@@ -4,9 +4,10 @@ import 'package:lumora_fe/features/today/today_controller.dart';
 import 'package:lumora_fe/features/today/today_repository.dart';
 
 class FakeTodayRepository implements TodayRepository {
-  FakeTodayRepository({this.fail = false});
+  FakeTodayRepository({this.fail = false, this.openReflection = true});
 
   bool fail;
+  bool openReflection;
   var session = const TodaySession(
     id: 'session-1',
     journeyId: 'journey-1',
@@ -39,11 +40,11 @@ class FakeTodayRepository implements TodayRepository {
       status: 'completed',
       completedAt: '2026-06-29T09:30:00Z',
     );
-    return const CompleteResult(
+    return CompleteResult(
       sessionId: 'session-1',
       status: 'completed',
       completedAt: '2026-06-29T09:30:00Z',
-      openReflection: true,
+      openReflection: openReflection,
     );
   }
 
@@ -90,6 +91,18 @@ void main() {
 
     expect(controller.state.plan?.sessions.single.status, 'completed');
     expect(controller.state.openReflectionSessionId, 'session-1');
+  });
+
+  test('complete from detail updates selected session when reflection stays closed', () async {
+    final controller = TodayController(
+      FakeTodayRepository(openReflection: false),
+    );
+
+    await controller.loadDetail('session-1');
+    await controller.complete('session-1');
+
+    expect(controller.state.selectedSession?.status, 'completed');
+    expect(controller.state.openReflectionSessionId, isNull);
   });
 
   test('undo complete returns session to scheduled', () async {

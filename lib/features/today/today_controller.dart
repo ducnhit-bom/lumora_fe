@@ -149,8 +149,16 @@ class TodayController extends StateNotifier<TodayState> {
     TodaySession Function(TodaySession session) update,
   ) {
     final plan = state.plan;
-    if (plan == null) return;
+    final selectedSession = state.selectedSession;
+    final updatedSelected = selectedSession?.id == sessionId
+        ? update(selectedSession!)
+        : selectedSession;
+    if (plan == null) {
+      state = state.copyWith(selectedSession: updatedSelected);
+      return;
+    }
     state = state.copyWith(
+      selectedSession: updatedSelected,
       plan: TodayPlan(
         date: plan.date,
         sessions: [

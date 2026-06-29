@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumora_fe/app/app.dart';
 import 'package:lumora_fe/features/auth/auth_controller.dart';
 import 'package:lumora_fe/features/journey/journey_repository.dart';
+import 'package:lumora_fe/features/reflection/reflection_repository.dart';
 import 'package:lumora_fe/features/today/today_repository.dart';
 
 class ScheduledTodayRepository implements TodayRepository {
@@ -65,6 +66,35 @@ class EmptyTodayRepository extends ScheduledTodayRepository {
   @override
   Future<TodayPlan> today() async =>
       const TodayPlan(date: '2026-06-29', sessions: []);
+}
+
+class FakeReflectionRepository implements ReflectionRepository {
+  int saveCount = 0;
+
+  @override
+  Future<ReflectionQuestion> question(String sessionId) async {
+    return ReflectionQuestion(
+      sessionId: sessionId,
+      question: 'What helped you make progress?',
+    );
+  }
+
+  @override
+  Future<Reflection> save({
+    required String sessionId,
+    required String content,
+    String? mood,
+  }) async {
+    saveCount += 1;
+    return Reflection(
+      id: 'reflection-$saveCount',
+      journeyId: 'journey-1',
+      sessionId: sessionId,
+      content: content,
+      mood: mood,
+      createdAt: '2026-06-29T09:30:00Z',
+    );
+  }
 }
 
 class CurrentJourneyRepository implements JourneyRepository {
@@ -162,7 +192,7 @@ void main() {
     expect(find.text('One calm focus at a time.'), findsOneWidget);
   });
 
-  testWidgets('today screen shows scheduled session and completion state', (
+  testWidgets('today screen opens reflection after completion', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -173,6 +203,9 @@ void main() {
           ),
           todayRepositoryProvider.overrideWith(
             (ref) => ScheduledTodayRepository(),
+          ),
+          reflectionRepositoryProvider.overrideWith(
+            (ref) => FakeReflectionRepository(),
           ),
         ],
         child: const LumoraApp(initialLocation: '/today'),
@@ -187,8 +220,104 @@ void main() {
     await tester.tap(find.text('Complete'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Reflection will open in Phase 5.'), findsOneWidget);
-    expect(find.text('Undo complete'), findsOneWidget);
+    expect(find.text('Reflection'), findsOneWidget);
+    expect(find.text('What helped you make progress?'), findsOneWidget);
+  });
+
+  testWidgets('reflection route saves and returns to Today', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            (ref) => AuthController.signedInForTest(),
+          ),
+          todayRepositoryProvider.overrideWith(
+            (ref) => ScheduledTodayRepository(),
+          ),
+          reflectionRepositoryProvider.overrideWith(
+            (ref) => FakeReflectionRepository(),
+          ),
+        ],
+        child: const LumoraApp(
+          initialLocation: '/reflections/session/today-1',
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('reflection-content-field')),
+      'I found one calm next step.',
+    );
+    await tester.tap(find.text('Balanced'));
+    await tester.tap(find.text('Save reflection'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Today'), findsWidgets);
+    expect(find.text('One calm focus at a time.'), findsOneWidget);
+  });
+
+  testWidgets('reflection route skips without saving and returns to Today', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            (ref) => AuthController.signedInForTest(),
+          ),
+          todayRepositoryProvider.overrideWith(
+            (ref) => ScheduledTodayRepository(),
+          ),
+          reflectionRepositoryProvider.overrideWith(
+            (ref) => FakeReflectionRepository(),
+          ),
+        ],
+        child: const LumoraApp(
+          initialLocation: '/reflections/session/today-1',
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Skip reflection'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Today'), findsWidgets);
+    expect(find.text('One calm focus at a time.'), findsOneWidget);
+  });
+
+  testWidgets('reflection route can reopen after a previous skip', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            (ref) => AuthController.signedInForTest(),
+          ),
+          todayRepositoryProvider.overrideWith(
+            (ref) => ScheduledTodayRepository(),
+          ),
+          reflectionRepositoryProvider.overrideWith(
+            (ref) => FakeReflectionRepository(),
+          ),
+        ],
+        child: const LumoraApp(
+          initialLocation: '/reflections/session/today-1',
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Skip reflection'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Complete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reflection'), findsOneWidget);
+    expect(find.text('What helped you make progress?'), findsOneWidget);
   });
 
   testWidgets('today session detail route shows focused detail', (

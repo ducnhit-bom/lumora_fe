@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
 import '../../shared/widgets/lumora_button.dart';
@@ -67,9 +68,20 @@ class _TodayDetailScreenState extends ConsumerState<TodayDetailScreen> {
                         label: 'Complete',
                         onPressed: state.isLoading
                             ? null
-                            : () => ref
-                                  .read(todayControllerProvider.notifier)
-                                  .complete(session.id),
+                            : () async {
+                                await ref
+                                    .read(todayControllerProvider.notifier)
+                                    .complete(session.id);
+                                final reflectionSessionId = ref
+                                    .read(todayControllerProvider)
+                                    .openReflectionSessionId;
+                                if (context.mounted &&
+                                    reflectionSessionId != null) {
+                                  context.go(
+                                    '/reflections/session/$reflectionSessionId',
+                                  );
+                                }
+                              },
                       ),
                     if (session.status == 'completed')
                       OutlinedButton(

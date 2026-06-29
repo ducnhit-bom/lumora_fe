@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/auth_placeholder_screen.dart';
 import '../features/foundation/foundation_screen.dart';
 import '../features/journey/journey_screen.dart';
+import '../features/reflection/reflection_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/lumora_shell.dart';
 import '../features/today/today_detail_screen.dart';
@@ -33,6 +34,11 @@ GoRouter createAppRouter({
       path: '/sessions/:sessionId',
       builder: (context, state) =>
           TodayDetailScreen(sessionId: state.pathParameters['sessionId']!),
+    ),
+    GoRoute(
+      path: '/reflections/session/:sessionId',
+      builder: (context, state) =>
+          ReflectionScreen(sessionId: state.pathParameters['sessionId']!),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {

@@ -47,13 +47,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             ),
             const SizedBox(height: LumoraSpacing.md),
           ],
-          if (state.openReflectionSessionId != null) ...[
-            Text(
-              'Reflection will open in Phase 5.',
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
-            ),
-            const SizedBox(height: LumoraSpacing.md),
-          ],
           if (state.isLoading && state.plan == null)
             const LumoraCard(child: Text('Loading your focus for today...'))
           else if (sessions.isEmpty)
@@ -129,9 +122,17 @@ class _SessionCard extends ConsumerWidget {
                   label: 'Complete',
                   onPressed: isLoading
                       ? null
-                      : () => ref
-                            .read(todayControllerProvider.notifier)
-                            .complete(session.id),
+                      : () async {
+                          await ref
+                              .read(todayControllerProvider.notifier)
+                              .complete(session.id);
+                          final reflectionSessionId = ref
+                              .read(todayControllerProvider)
+                              .openReflectionSessionId;
+                          if (context.mounted && reflectionSessionId != null) {
+                            context.go('/reflections/session/$reflectionSessionId');
+                          }
+                        },
                 ),
                 OutlinedButton(
                   onPressed: isLoading
