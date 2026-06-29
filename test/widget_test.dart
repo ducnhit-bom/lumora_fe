@@ -5,6 +5,67 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lumora_fe/app/app.dart';
 import 'package:lumora_fe/features/auth/auth_controller.dart';
 import 'package:lumora_fe/features/journey/journey_repository.dart';
+import 'package:lumora_fe/features/today/today_repository.dart';
+
+class ScheduledTodayRepository implements TodayRepository {
+  var session = const TodaySession(
+    id: 'today-1',
+    journeyId: 'journey-1',
+    title: 'Write proposal',
+    category: 'work',
+    priority: 'high',
+    estimatedMinutes: 45,
+    scheduledDate: '2026-06-29',
+    scheduledTime: '09:00',
+    status: 'scheduled',
+  );
+
+  @override
+  Future<TodayPlan> today() async =>
+      TodayPlan(date: '2026-06-29', sessions: [session]);
+
+  @override
+  Future<TodaySession> detail(String sessionId) async => session;
+
+  @override
+  Future<CompleteResult> complete(String sessionId) async {
+    session = session.copyWith(
+      status: 'completed',
+      completedAt: '2026-06-29T09:30:00Z',
+    );
+    return const CompleteResult(
+      sessionId: 'today-1',
+      status: 'completed',
+      completedAt: '2026-06-29T09:30:00Z',
+      openReflection: true,
+    );
+  }
+
+  @override
+  Future<UndoCompleteResult> undoComplete(String sessionId) async {
+    session = session.copyWith(status: 'scheduled', clearCompletedAt: true);
+    return const UndoCompleteResult(sessionId: 'today-1', status: 'scheduled');
+  }
+
+  @override
+  Future<SkipResult> skip(String sessionId) async {
+    session = session.copyWith(
+      status: 'skipped',
+      skippedAt: '2026-06-29T09:45:00Z',
+    );
+    return const SkipResult(
+      sessionId: 'today-1',
+      status: 'skipped',
+      skippedAt: '2026-06-29T09:45:00Z',
+    );
+  }
+}
+
+class EmptyTodayRepository extends ScheduledTodayRepository {
+  @override
+  Future<TodayPlan> today() async =>
+      const TodayPlan(date: '2026-06-29', sessions: []);
+}
 
 class CurrentJourneyRepository implements JourneyRepository {
   @override
@@ -97,12 +158,79 @@ void main() {
     expect(find.text('Journey'), findsWidgets);
     expect(find.text('Review'), findsWidgets);
     expect(find.text('Settings'), findsWidgets);
-    expect(
-      find.text(
-        'Plan a meaningful week, then return to one calm focus at a time.',
+    expect(find.text('Today'), findsWidgets);
+    expect(find.text('One calm focus at a time.'), findsOneWidget);
+  });
+
+  testWidgets('today screen shows scheduled session and completion state', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            (ref) => AuthController.signedInForTest(),
+          ),
+          todayRepositoryProvider.overrideWith(
+            (ref) => ScheduledTodayRepository(),
+          ),
+        ],
+        child: const LumoraApp(initialLocation: '/today'),
       ),
-      findsOneWidget,
     );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Write proposal'), findsWidgets);
+    expect(find.text('09:00 • 45 min • high'), findsWidgets);
+
+    await tester.tap(find.text('Complete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reflection will open in Phase 5.'), findsOneWidget);
+    expect(find.text('Undo complete'), findsOneWidget);
+  });
+
+  testWidgets('today session detail route shows focused detail', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            (ref) => AuthController.signedInForTest(),
+          ),
+          todayRepositoryProvider.overrideWith(
+            (ref) => ScheduledTodayRepository(),
+          ),
+        ],
+        child: const LumoraApp(initialLocation: '/sessions/today-1'),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Focus detail'), findsOneWidget);
+    expect(find.text('Write proposal'), findsWidgets);
+    expect(find.text('Complete'), findsOneWidget);
+  });
+
+  testWidgets('today screen shows friendly empty state', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            (ref) => AuthController.signedInForTest(),
+          ),
+          todayRepositoryProvider.overrideWith((ref) => EmptyTodayRepository()),
+        ],
+        child: const LumoraApp(initialLocation: '/today'),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('No focus sessions today.'), findsOneWidget);
   });
 
   testWidgets('navigates between foundation tabs', (tester) async {

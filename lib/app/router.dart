@@ -6,6 +6,8 @@ import '../features/foundation/foundation_screen.dart';
 import '../features/journey/journey_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/lumora_shell.dart';
+import '../features/today/today_detail_screen.dart';
+import '../features/today/today_screen.dart';
 
 GoRouter createAppRouter({
   String initialLocation = '/today',
@@ -27,6 +29,11 @@ GoRouter createAppRouter({
       path: '/auth',
       builder: (context, state) => const AuthPlaceholderScreen(),
     ),
+    GoRoute(
+      path: '/sessions/:sessionId',
+      builder: (context, state) =>
+          TodayDetailScreen(sessionId: state.pathParameters['sessionId']!),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return LumoraShell(navigationShell: navigationShell);
@@ -36,11 +43,7 @@ GoRouter createAppRouter({
           routes: [
             GoRoute(
               path: '/today',
-              builder: (context, state) => const FoundationScreen(
-                title: 'Today',
-                headline:
-                    'Plan a meaningful week, then return to one calm focus at a time.',
-              ),
+              builder: (context, state) => const TodayScreen(),
             ),
           ],
         ),
