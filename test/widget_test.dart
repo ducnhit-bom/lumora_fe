@@ -6,6 +6,7 @@ import 'package:lumora_fe/app/app.dart';
 import 'package:lumora_fe/features/auth/auth_controller.dart';
 import 'package:lumora_fe/features/journey/journey_repository.dart';
 import 'package:lumora_fe/features/reflection/reflection_repository.dart';
+import 'package:lumora_fe/features/review/review_repository.dart';
 import 'package:lumora_fe/features/today/today_repository.dart';
 
 class ScheduledTodayRepository implements TodayRepository {
@@ -97,6 +98,41 @@ class FakeReflectionRepository implements ReflectionRepository {
   }
 }
 
+class FakeReviewRepository implements ReviewRepository {
+  @override
+  Future<WeeklyReview> review(String journeyId) async {
+    return const WeeklyReview(
+      journeyId: 'journey-current',
+      sessionsCompleted: 2,
+      reflectionCount: 1,
+      moodSummary: MoodSummary(energized: 0, balanced: 1, challenged: 0),
+      insight: ReviewInsight(
+        source: 'fallback',
+        text: 'You made steady progress by protecting small focus windows.',
+      ),
+      recommendation: 'Plan next week with one clear high-priority focus and a little more breathing room.',
+    );
+  }
+}
+
+class NoJourneyRepository extends CurrentJourneyRepository {
+  @override
+  Future<Journey?> currentJourney() async => null;
+}
+
+class DraftJourneyRepository extends CurrentJourneyRepository {
+  @override
+  Future<Journey?> currentJourney() async {
+    return Journey(
+      id: 'journey-draft',
+      weekStart: DateTime(2026, 6, 22),
+      title: 'Draft week',
+      status: 'draft',
+      sessions: const [],
+    );
+  }
+}
+
 class CurrentJourneyRepository implements JourneyRepository {
   @override
   Future<Journey?> currentJourney() async {
@@ -104,7 +140,7 @@ class CurrentJourneyRepository implements JourneyRepository {
       id: 'journey-current',
       weekStart: DateTime(2026, 6, 22),
       title: 'Existing week',
-      status: 'draft',
+      status: 'active',
       sessions: const [],
     );
   }
@@ -383,6 +419,69 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Create journey'), findsOneWidget);
+  });
+
+  testWidgets('review tab shows weekly review summary', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            (ref) => AuthController.signedInForTest(),
+          ),
+          journeyRepositoryProvider.overrideWith(
+            (ref) => CurrentJourneyRepository(),
+          ),
+          reviewRepositoryProvider.overrideWith((ref) => FakeReviewRepository()),
+        ],
+        child: const LumoraApp(initialLocation: '/review'),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Weekly Review'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('Reflections'), findsOneWidget);
+    expect(find.text('You made steady progress by protecting small focus windows.'), findsOneWidget);
+  });
+
+  testWidgets('review tab shows empty state without current journey', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            (ref) => AuthController.signedInForTest(),
+          ),
+          journeyRepositoryProvider.overrideWith((ref) => NoJourneyRepository()),
+        ],
+        child: const LumoraApp(initialLocation: '/review'),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('No weekly journey yet.'), findsOneWidget);
+    expect(find.text('Plan this week'), findsOneWidget);
+  });
+
+  testWidgets('review tab does not show review for draft journey', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            (ref) => AuthController.signedInForTest(),
+          ),
+          journeyRepositoryProvider.overrideWith((ref) => DraftJourneyRepository()),
+          reviewRepositoryProvider.overrideWith((ref) => FakeReviewRepository()),
+        ],
+        child: const LumoraApp(initialLocation: '/review'),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('No weekly journey yet.'), findsOneWidget);
+    expect(find.text('You made steady progress by protecting small focus windows.'), findsNothing);
   });
 
   testWidgets('mock journey flow creates suggestion and accepts journey', (

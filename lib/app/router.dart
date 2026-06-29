@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/auth_placeholder_screen.dart';
-import '../features/foundation/foundation_screen.dart';
 import '../features/journey/journey_screen.dart';
 import '../features/reflection/reflection_screen.dart';
+import '../features/review/review_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/lumora_shell.dart';
 import '../features/today/today_detail_screen.dart';
@@ -65,10 +65,7 @@ GoRouter createAppRouter({
           routes: [
             GoRoute(
               path: '/review',
-              builder: (context, state) => const FoundationScreen(
-                title: 'Review',
-                headline: 'A gentle weekly reflection will live here.',
-              ),
+              builder: (context, state) => const ReviewScreen(),
             ),
           ],
         ),

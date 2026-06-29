@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class LumoraShell extends StatelessWidget {
+import '../review/review_controller.dart';
+
+class LumoraShell extends ConsumerWidget {
   const LumoraShell({
     required this.navigationShell,
     super.key,
@@ -10,7 +13,7 @@ class LumoraShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lumora'),
@@ -19,7 +22,7 @@ class LumoraShell extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: _goBranch,
+        onDestinationSelected: (index) => _goBranch(ref, index),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.wb_sunny_outlined),
@@ -46,10 +49,13 @@ class LumoraShell extends StatelessWidget {
     );
   }
 
-  void _goBranch(int index) {
+  void _goBranch(WidgetRef ref, int index) {
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
+    if (index == 2) {
+      ref.read(reviewControllerProvider.notifier).load();
+    }
   }
 }
